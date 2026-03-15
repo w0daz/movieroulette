@@ -94,6 +94,33 @@ app.get('/api/genres/:id/movies', (req, res) => {
   res.json({ genre, movies: movies.map(enrichMovie) });
 });
 
+// GET /api/movies/spin — spin with optional genre filter (used by frontend)
+app.get('/api/movies/spin', (req, res) => {
+  const { genre_ids } = req.query; // comma-separated
+
+  let movie;
+  if (genre_ids) {
+    const ids = genre_ids.split(',').map(Number).filter(Boolean);
+    if (ids.length === 0) return res.status(400).json({ error: 'Invalid genre_ids' });
+
+    const placeholders = ids.map(() => '?').join(',');
+    movie = db.prepare(`
+      SELECT m.*, COUNT(DISTINCT mg.genre_id) as match_count
+      FROM movies m
+      JOIN movie_genres mg ON mg.movie_id = m.id
+      WHERE mg.genre_id IN (${placeholders})
+      GROUP BY m.id
+      ORDER BY RANDOM()
+      LIMIT 1
+    `).get(...ids);
+  } else {
+    movie = db.prepare('SELECT * FROM movies ORDER BY RANDOM() LIMIT 1').get();
+  }
+
+  if (!movie) return res.status(404).json({ error: 'No movies found for selected genres' });
+  res.json(enrichMovie(movie));
+});
+
 // GET /api/movies/:id — single movie by id
 app.get('/api/movies/:id', (req, res) => {
   const movie = db.prepare('SELECT * FROM movies WHERE id = ?').get(req.params.id);
@@ -155,33 +182,6 @@ app.post('/api/movies/:id/vote', (req, res) => {
   db.prepare(`UPDATE movies SET ${col} = ${col} + 1 WHERE id = ?`).run(req.params.id);
   const updated = db.prepare('SELECT * FROM movies WHERE id = ?').get(req.params.id);
   res.json({ id: updated.id, upvotes: updated.upvotes, downvotes: updated.downvotes });
-});
-
-// GET /api/movies/spin — spin with optional genre filter (used by frontend)
-app.get('/api/movies/spin', (req, res) => {
-  const { genre_ids } = req.query; // comma-separated
-
-  let movie;
-  if (genre_ids) {
-    const ids = genre_ids.split(',').map(Number).filter(Boolean);
-    if (ids.length === 0) return res.status(400).json({ error: 'Invalid genre_ids' });
-
-    const placeholders = ids.map(() => '?').join(',');
-    movie = db.prepare(`
-      SELECT m.*, COUNT(DISTINCT mg.genre_id) as match_count
-      FROM movies m
-      JOIN movie_genres mg ON mg.movie_id = m.id
-      WHERE mg.genre_id IN (${placeholders})
-      GROUP BY m.id
-      ORDER BY RANDOM()
-      LIMIT 1
-    `).get(...ids);
-  } else {
-    movie = db.prepare('SELECT * FROM movies ORDER BY RANDOM() LIMIT 1').get();
-  }
-
-  if (!movie) return res.status(404).json({ error: 'No movies found for selected genres' });
-  res.json(enrichMovie(movie));
 });
 
 // Fallback to index.html
