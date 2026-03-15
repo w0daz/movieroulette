@@ -10,16 +10,18 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #f7f5f0;
-      --surface: #ffffff;
+      --bg: #0f0f11;
+      --surface: #1a1a1f;
       --accent: #e63946;
       --accent-dark: #c1121f;
-      --text: #1a1a1a;
-      --text-muted: #6b6b6b;
-      --border: #e8e4de;
-      --tag-bg: #f0ede8;
-      --shadow: 0 4px 24px rgba(0,0,0,0.08);
-      --shadow-lg: 0 16px 48px rgba(0,0,0,0.14);
+      --text: #f0eee9;
+      --text-muted: #8a8790;
+      --border: #2a2a32;
+      --tag-bg: #23232b;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --shadow-lg: 0 16px 48px rgba(0,0,0,0.6);
+      --sidebar-collapsed: 28%;
+      --sidebar-open: 380px;
     }
 
     body {
@@ -33,23 +35,24 @@
 
     /* ── Header ── */
     header {
-      padding: 28px 40px;
+      padding: 18px 40px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--border);
       background: var(--surface);
+      flex-shrink: 0;
     }
     .logo {
       font-family: 'Playfair Display', serif;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 900;
       letter-spacing: -0.5px;
       color: var(--text);
     }
     .logo span { color: var(--accent); }
     .docs-link {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 500;
       color: var(--text-muted);
       text-decoration: none;
@@ -60,144 +63,73 @@
     }
     .docs-link:hover { color: var(--accent); border-color: var(--accent); }
 
-    /* ── Main layout ── */
-    main {
+    /* ── Two-column layout ── */
+    .layout {
       flex: 1;
-      max-width: 780px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 56px 24px 80px;
-    }
-
-    .hero-title {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(2.2rem, 6vw, 3.4rem);
-      font-weight: 900;
-      line-height: 1.1;
-      letter-spacing: -1px;
-      margin-bottom: 12px;
-    }
-    .hero-sub {
-      font-size: 1rem;
-      color: var(--text-muted);
-      font-weight: 300;
-      margin-bottom: 48px;
-    }
-
-    /* ── Genre selector ── */
-    .section-label {
-      font-size: 0.72rem;
-      font-weight: 500;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 14px;
-    }
-    .genre-grid {
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 40px;
-    }
-    .genre-chip {
-      padding: 8px 18px;
-      border-radius: 100px;
-      border: 1.5px solid var(--border);
-      background: var(--surface);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.88rem;
-      font-weight: 400;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.18s ease;
-      user-select: none;
-    }
-    .genre-chip:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-    .genre-chip.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-      font-weight: 500;
     }
 
-    /* ── Spin button ── */
-    .spin-wrap {
+    /* ── Left: card area ── */
+    .card-area {
+      flex: 1;
+      padding: 56px 64px;
       display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 56px;
-    }
-    .spin-btn {
-      padding: 16px 40px;
-      background: var(--text);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      letter-spacing: 0.01em;
-      transition: background 0.18s, transform 0.12s;
+      align-items: flex-start;
+      justify-content: center;
       position: relative;
-      overflow: hidden;
-    }
-    .spin-btn:hover { background: var(--accent); }
-    .spin-btn:active { transform: scale(0.97); }
-    .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .spin-btn .btn-icon { margin-right: 8px; display: inline-block; transition: transform 0.4s; }
-    .spin-btn.spinning .btn-icon { animation: spin 0.6s linear; }
-
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
     }
 
-    .clear-btn {
-      font-size: 0.82rem;
+    /* Empty state (shown before first spin) */
+    .empty-hint {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
       color: var(--text-muted);
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 4px;
-      text-decoration: underline;
-      text-underline-offset: 3px;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      white-space: nowrap;
     }
-    .clear-btn:hover { color: var(--text); }
+    .empty-hint.hidden { opacity: 0; }
+    .empty-hint .e-icon { font-size: 3.4rem; opacity: 0.28; margin-bottom: 16px; }
+    .empty-hint h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--text);
+      opacity: 0.33;
+      margin-bottom: 8px;
+    }
+    .empty-hint p { font-size: 0.84rem; opacity: 0.55; white-space: normal; max-width: 260px; margin: 0 auto; }
+    .hint-arrow { margin-top: 18px; font-size: 1.4rem; opacity: 0.3; }
 
-    /* ── Movie card ── */
+    /* Card */
     .card-wrap {
+      width: 100%;
+      max-width: 680px;
       opacity: 0;
       transform: translateY(20px);
       transition: opacity 0.4s ease, transform 0.4s ease;
     }
-    .card-wrap.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .card-wrap.visible { opacity: 1; transform: translateY(0); }
 
     .movie-card {
       background: var(--surface);
-      border-radius: 12px;
-      padding: 36px 40px;
+      border-radius: 16px;
+      padding: 40px 44px;
       box-shadow: var(--shadow-lg);
       border: 1px solid var(--border);
-      position: relative;
     }
-
     .movie-year-director {
       font-size: 0.8rem;
-      font-weight: 400;
       color: var(--text-muted);
       letter-spacing: 0.04em;
       margin-bottom: 8px;
     }
     .movie-title {
       font-family: 'Playfair Display', serif;
-      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-size: clamp(1.7rem, 3vw, 2.4rem);
       font-weight: 700;
       line-height: 1.15;
       letter-spacing: -0.5px;
@@ -210,12 +142,7 @@
       margin-bottom: 24px;
       font-weight: 300;
     }
-    .movie-genres {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 28px;
-    }
+    .movie-genres { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
     .genre-tag {
       padding: 4px 12px;
       border-radius: 4px;
@@ -226,7 +153,6 @@
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
-
     .vote-row {
       display: flex;
       align-items: center;
@@ -234,11 +160,7 @@
       padding-top: 20px;
       border-top: 1px solid var(--border);
     }
-    .vote-label {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      margin-right: 4px;
-    }
+    .vote-label { font-size: 0.78rem; color: var(--text-muted); }
     .vote-btn {
       display: flex;
       align-items: center;
@@ -259,7 +181,6 @@
     .vote-btn.down:hover { border-color: var(--accent); color: var(--accent); }
     .vote-btn.voted { opacity: 0.6; pointer-events: none; }
     .vote-count { font-size: 0.82rem; font-weight: 400; }
-
     .spin-again-btn {
       margin-left: auto;
       padding: 8px 20px;
@@ -275,26 +196,6 @@
     }
     .spin-again-btn:hover { background: var(--border); color: var(--text); }
 
-    /* ── Empty / error states ── */
-    .state-msg {
-      text-align: center;
-      padding: 40px;
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-
-    /* ── Shimmer loader ── */
-    .shimmer {
-      background: linear-gradient(90deg, #f0ede8 25%, #e8e4de 50%, #f0ede8 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.2s infinite;
-      border-radius: 6px;
-    }
-    @keyframes shimmer {
-      from { background-position: 200% 0; }
-      to { background-position: -200% 0; }
-    }
-
     .poster-img {
       display: block;
       max-height: 300px;
@@ -303,19 +204,143 @@
       margin: 0 auto 24px;
     }
 
+    /* ── Right: collapsible sidebar ── */
+    .sidebar {
+      width: var(--sidebar-collapsed);
+      min-width: 220px;
+      max-width: var(--sidebar-open);
+      transition: width 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
+      height: 100vh;
+    }
+    .sidebar:hover { width: var(--sidebar-open); }
+
+    /* Sidebar content */
+    .sidebar-inner {
+      width: var(--sidebar-open);
+      height: 100%;
+      overflow-y: auto;
+      padding: 44px 32px 40px;
+      container-type: inline-size;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.1rem, 5.6cqi, 2rem);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+      white-space: nowrap;
+    }
+    .hero-sub {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      font-weight: 300;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+    .section-label {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .genre-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+    .genre-chip {
+      padding: 6px 14px;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      user-select: none;
+    }
+    .genre-chip:hover { border-color: var(--accent); color: var(--accent); }
+    .genre-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+
+    .spin-wrap { display: flex; flex-direction: column; gap: 10px; }
+    .spin-btn {
+      width: 100%;
+      padding: 14px 20px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.18s, transform 0.12s;
+    }
+    .spin-btn:hover { background: var(--accent-dark); }
+    .spin-btn:active { transform: scale(0.98); }
+    .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .spin-btn .btn-icon { margin-right: 8px; display: inline-block; }
+    .spin-btn.spinning .btn-icon { animation: spin 0.6s linear; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    .clear-btn {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 0;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-align: center;
+      width: 100%;
+    }
+    .clear-btn:hover { color: var(--text); }
+
+    /* ── States / shimmer ── */
+    .state-msg { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.95rem; }
+    .shimmer {
+      background: linear-gradient(90deg, #1e1e26 25%, #2a2a35 50%, #1e1e26 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
     /* ── Footer ── */
     footer {
       text-align: center;
-      padding: 24px;
-      font-size: 0.78rem;
+      padding: 14px;
+      font-size: 0.74rem;
       color: var(--text-muted);
       border-top: 1px solid var(--border);
+      flex-shrink: 0;
     }
 
-    @media (max-width: 540px) {
-      header { padding: 20px; }
-      main { padding: 36px 16px 60px; }
-      .movie-card { padding: 24px 20px; }
+    /* ── Mobile ── */
+    @media (max-width: 720px) {
+      .layout { flex-direction: column-reverse; }
+      .sidebar {
+        width: 100% !important;
+        max-width: 100%;
+        min-width: unset;
+        height: auto;
+        position: static;
+        border-left: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .sidebar-inner { width: 100%; padding: 28px 20px 24px; }
+      .card-area { padding: 36px 20px 48px; }
+      header { padding: 16px 20px; }
+      .movie-card { padding: 28px 24px; }
     }
   </style>
 </head>
@@ -326,29 +351,45 @@
   <a class="docs-link" href="/docs" target="_blank">API Docs</a>
 </header>
 
-<main>
-  <h1 class="hero-title">What should I<br>watch tonight?</h1>
-  <p class="hero-sub">Pick some genres, spin the wheel — we'll handle the rest.</p>
+<div class="layout">
 
-  <div class="section-label">Pick your mood</div>
-  <div class="genre-grid" id="genreGrid">
-    <div class="shimmer" style="height:38px;width:80px;border-radius:100px"></div>
-    <div class="shimmer" style="height:38px;width:90px;border-radius:100px"></div>
-    <div class="shimmer" style="height:38px;width:70px;border-radius:100px"></div>
-    <div class="shimmer" style="height:38px;width:100px;border-radius:100px"></div>
-  </div>
+  <!-- ── Left: movie card ── -->
+  <main class="card-area">
+    <div class="empty-hint" id="emptyHint">
+      <div class="e-icon">🎬</div>
+      <h2>Ready when you are</h2>
+      <p>Hover the panel on the right and spin the wheel</p>
+      <div class="hint-arrow">⟶</div>
+    </div>
+    <div class="card-wrap" id="cardWrap">
+      <div class="movie-card" id="movieCard"></div>
+    </div>
+  </main>
 
-  <div class="spin-wrap">
-    <button class="spin-btn" id="spinBtn" onclick="doSpin()">
-      <span class="btn-icon">🎬</span> Spin the wheel
-    </button>
-    <button class="clear-btn" onclick="clearGenres()">Clear selection</button>
-  </div>
+  <!-- ── Right: collapsible controls ── -->
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+      <h1 class="hero-title">What should I watch tonight?</h1>
+      <p class="hero-sub">Pick some genres, spin the reel — we'll handle the rest.</p>
 
-  <div class="card-wrap" id="cardWrap">
-    <div class="movie-card" id="movieCard"></div>
-  </div>
-</main>
+      <div class="section-label">Pick your mood</div>
+      <div class="genre-grid" id="genreGrid">
+        <div class="shimmer" style="height:34px;width:72px;border-radius:100px"></div>
+        <div class="shimmer" style="height:34px;width:82px;border-radius:100px"></div>
+        <div class="shimmer" style="height:34px;width:64px;border-radius:100px"></div>
+        <div class="shimmer" style="height:34px;width:90px;border-radius:100px"></div>
+      </div>
+
+      <div class="spin-wrap">
+        <button class="spin-btn" id="spinBtn" onclick="doSpin()">
+          <span class="btn-icon">🎬</span> Spin the reel
+        </button>
+        <button class="clear-btn" onclick="clearGenres()">Clear selection</button>
+      </div>
+    </div>
+  </aside>
+
+</div>
 
 <footer>MovieRoulette &mdash; for the indecisive cinephile</footer>
 
@@ -407,6 +448,7 @@
     btn.disabled = true;
     btn.classList.add('spinning');
     hasVoted = false;
+    document.getElementById('emptyHint')?.classList.add('hidden');
 
     card.innerHTML = `<div class="shimmer" style="height:280px;border-radius:8px;margin-bottom:24px"></div>`;
     wrap.classList.remove('visible');
@@ -485,7 +527,7 @@
     document.getElementById('downCount').textContent = data.downvotes;
   }
 
-  loadGenres();
+  loadGenres().then(() => doSpin());
 </script>
 </body>
 </html>
