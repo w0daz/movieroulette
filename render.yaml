@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: movieroulette
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 3000
+    disk:
+      name: sqlite-data
+      mountPath: /app/db
+      sizeGB: 1

@@ -1,0 +1,16 @@
+{
+  "name": "movieroulette",
+  "version": "1.0.0",
+  "description": "MovieRoulette – spin the wheel, find your next watch",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.3",
+    "express": "^4.18.2",
+    "swagger-ui-express": "^5.0.0",
+    "yamljs": "^0.3.0"
+  }
+}

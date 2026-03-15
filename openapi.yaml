@@ -1,0 +1,389 @@
+openapi: 3.0.3
+info:
+  title: MovieRoulette API
+  description: |
+    **MovieRoulette** is a movie recommendation service where users spin the wheel and get a random movie suggestion based on selected genres.
+
+    You can browse genres, discover movies, add new content, assign genres, and vote on movies.
+  version: 1.0.0
+  contact:
+    name: MovieRoulette
+servers:
+  - url: /api
+    description: Local / deployed server
+
+tags:
+  - name: Genres
+    description: Genre management
+  - name: Movies
+    description: Movie discovery and management
+
+paths:
+  /genres:
+    get:
+      tags: [Genres]
+      summary: List all genres
+      description: Returns a list of all available genres.
+      responses:
+        '200':
+          description: Array of genres
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Genre'
+              example:
+                - id: 1
+                  name: Action
+                  created_at: "2024-01-01T00:00:00"
+                - id: 2
+                  name: Comedy
+                  created_at: "2024-01-01T00:00:00"
+
+    post:
+      tags: [Genres]
+      summary: Add a new genre
+      description: Creates a new genre category.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  example: Documentary
+      responses:
+        '201':
+          description: Genre created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Genre'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Genre already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /genres/{id}/movies:
+    get:
+      tags: [Genres]
+      summary: Get all movies in a genre
+      description: Returns all movies that belong to the specified genre.
+      parameters:
+        - $ref: '#/components/parameters/GenreId'
+      responses:
+        '200':
+          description: Genre with its movies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  genre:
+                    $ref: '#/components/schemas/Genre'
+                  movies:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MovieWithGenres'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /genres/{id}/random:
+    get:
+      tags: [Genres]
+      summary: Get a random movie from a genre
+      description: Returns a single random movie from the specified genre.
+      parameters:
+        - $ref: '#/components/parameters/GenreId'
+      responses:
+        '200':
+          description: A random movie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieWithGenres'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /movies/random:
+    get:
+      tags: [Movies]
+      summary: Get a random movie from all movies
+      description: Returns a completely random movie regardless of genre.
+      responses:
+        '200':
+          description: A random movie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieWithGenres'
+              example:
+                id: 3
+                title: Inception
+                year: 2010
+                director: Christopher Nolan
+                description: A thief who steals corporate secrets through dream-sharing technology.
+                upvotes: 42
+                downvotes: 3
+                created_at: "2024-01-01T00:00:00"
+                genres:
+                  - id: 1
+                    name: Action
+                  - id: 5
+                    name: Sci-Fi
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /movies/spin:
+    get:
+      tags: [Movies]
+      summary: Spin — get a random movie for selected genres
+      description: |
+        The core roulette endpoint. Pass one or more genre IDs as a comma-separated list to get a random movie matching any of those genres. If no genre_ids are provided, returns a completely random movie.
+      parameters:
+        - in: query
+          name: genre_ids
+          schema:
+            type: string
+            example: "1,3,5"
+          description: Comma-separated list of genre IDs to filter by
+      responses:
+        '200':
+          description: A recommended movie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieWithGenres'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /movies/{id}:
+    get:
+      tags: [Movies]
+      summary: Get a movie by ID
+      description: Returns full details for a single movie.
+      parameters:
+        - $ref: '#/components/parameters/MovieId'
+      responses:
+        '200':
+          description: Movie details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieWithGenres'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /movies:
+    post:
+      tags: [Movies]
+      summary: Add a new movie
+      description: Creates a new movie and optionally assigns it to genres.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, year, director, description]
+              properties:
+                title:
+                  type: string
+                  example: Oppenheimer
+                year:
+                  type: integer
+                  example: 2023
+                director:
+                  type: string
+                  example: Christopher Nolan
+                description:
+                  type: string
+                  example: The story of J. Robert Oppenheimer and the development of the atomic bomb.
+                genre_ids:
+                  type: array
+                  items:
+                    type: integer
+                  example: [3, 6]
+      responses:
+        '201':
+          description: Movie created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieWithGenres'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /movies/{id}/genres:
+    post:
+      tags: [Movies]
+      summary: Assign movie to an additional genre
+      description: Links an existing movie to an additional genre.
+      parameters:
+        - $ref: '#/components/parameters/MovieId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [genre_id]
+              properties:
+                genre_id:
+                  type: integer
+                  example: 4
+      responses:
+        '200':
+          description: Updated movie with genres
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieWithGenres'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Movie already assigned to this genre
+
+  /movies/{id}/vote:
+    post:
+      tags: [Movies]
+      summary: Vote on a movie
+      description: Cast an upvote or downvote for a movie.
+      parameters:
+        - $ref: '#/components/parameters/MovieId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vote]
+              properties:
+                vote:
+                  type: string
+                  enum: [up, down]
+                  example: up
+      responses:
+        '200':
+          description: Updated vote counts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  upvotes:
+                    type: integer
+                  downvotes:
+                    type: integer
+              example:
+                id: 1
+                upvotes: 43
+                downvotes: 3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  parameters:
+    MovieId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+      description: Movie ID
+    GenreId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+      description: Genre ID
+
+  schemas:
+    Genre:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Action
+        created_at:
+          type: string
+          format: date-time
+
+    Movie:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Inception
+        year:
+          type: integer
+          example: 2010
+        director:
+          type: string
+          example: Christopher Nolan
+        description:
+          type: string
+          example: A thief who steals corporate secrets through dream-sharing technology.
+        upvotes:
+          type: integer
+          example: 42
+        downvotes:
+          type: integer
+          example: 3
+        created_at:
+          type: string
+          format: date-time
+
+    MovieWithGenres:
+      allOf:
+        - $ref: '#/components/schemas/Movie'
+        - type: object
+          properties:
+            genres:
+              type: array
+              items:
+                $ref: '#/components/schemas/Genre'
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Movie not found
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Movie not found
+    BadRequest:
+      description: Invalid request body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: title, year, director, and description are required

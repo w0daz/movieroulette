@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MovieRoulette</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f7f5f0;
+      --surface: #ffffff;
+      --accent: #e63946;
+      --accent-dark: #c1121f;
+      --text: #1a1a1a;
+      --text-muted: #6b6b6b;
+      --border: #e8e4de;
+      --tag-bg: #f0ede8;
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-lg: 0 16px 48px rgba(0,0,0,0.14);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 28px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+    .logo span { color: var(--accent); }
+    .docs-link {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-bottom: 1px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .docs-link:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── Main layout ── */
+    main {
+      flex: 1;
+      max-width: 780px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 56px 24px 80px;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 6vw, 3.4rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+    .hero-sub {
+      font-size: 1rem;
+      color: var(--text-muted);
+      font-weight: 300;
+      margin-bottom: 48px;
+    }
+
+    /* ── Genre selector ── */
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    .genre-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+    .genre-chip {
+      padding: 8px 18px;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      user-select: none;
+    }
+    .genre-chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .genre-chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 500;
+    }
+
+    /* ── Spin button ── */
+    .spin-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 56px;
+    }
+    .spin-btn {
+      padding: 16px 40px;
+      background: var(--text);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: background 0.18s, transform 0.12s;
+      position: relative;
+      overflow: hidden;
+    }
+    .spin-btn:hover { background: var(--accent); }
+    .spin-btn:active { transform: scale(0.97); }
+    .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .spin-btn .btn-icon { margin-right: 8px; display: inline-block; transition: transform 0.4s; }
+    .spin-btn.spinning .btn-icon { animation: spin 0.6s linear; }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .clear-btn {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .clear-btn:hover { color: var(--text); }
+
+    /* ── Movie card ── */
+    .card-wrap {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .card-wrap.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .movie-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 36px 40px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    .movie-year-director {
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+    .movie-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+      margin-bottom: 16px;
+    }
+    .movie-desc {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      font-weight: 300;
+    }
+    .movie-genres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+    .genre-tag {
+      padding: 4px 12px;
+      border-radius: 4px;
+      background: var(--tag-bg);
+      font-size: 0.76rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .vote-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .vote-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-right: 4px;
+    }
+    .vote-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s;
+      color: var(--text-muted);
+    }
+    .vote-btn:hover { border-color: var(--text); color: var(--text); }
+    .vote-btn.up:hover { border-color: #2a9d8f; color: #2a9d8f; }
+    .vote-btn.down:hover { border-color: var(--accent); color: var(--accent); }
+    .vote-btn.voted { opacity: 0.6; pointer-events: none; }
+    .vote-count { font-size: 0.82rem; font-weight: 400; }
+
+    .spin-again-btn {
+      margin-left: auto;
+      padding: 8px 20px;
+      border-radius: 6px;
+      background: var(--tag-bg);
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s;
+    }
+    .spin-again-btn:hover { background: var(--border); color: var(--text); }
+
+    /* ── Empty / error states ── */
+    .state-msg {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* ── Shimmer loader ── */
+    .shimmer {
+      background: linear-gradient(90deg, #f0ede8 25%, #e8e4de 50%, #f0ede8 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer {
+      from { background-position: 200% 0; }
+      to { background-position: -200% 0; }
+    }
+
+    .poster-img {
+      display: block;
+      max-height: 300px;
+      width: auto;
+      border-radius: 8px;
+      margin: 0 auto 24px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 540px) {
+      header { padding: 20px; }
+      main { padding: 36px 16px 60px; }
+      .movie-card { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Movie<span>Roulette</span></div>
+  <a class="docs-link" href="/docs" target="_blank">API Docs</a>
+</header>
+
+<main>
+  <h1 class="hero-title">What should I<br>watch tonight?</h1>
+  <p class="hero-sub">Pick some genres, spin the wheel — we'll handle the rest.</p>
+
+  <div class="section-label">Pick your mood</div>
+  <div class="genre-grid" id="genreGrid">
+    <div class="shimmer" style="height:38px;width:80px;border-radius:100px"></div>
+    <div class="shimmer" style="height:38px;width:90px;border-radius:100px"></div>
+    <div class="shimmer" style="height:38px;width:70px;border-radius:100px"></div>
+    <div class="shimmer" style="height:38px;width:100px;border-radius:100px"></div>
+  </div>
+
+  <div class="spin-wrap">
+    <button class="spin-btn" id="spinBtn" onclick="doSpin()">
+      <span class="btn-icon">🎬</span> Spin the wheel
+    </button>
+    <button class="clear-btn" onclick="clearGenres()">Clear selection</button>
+  </div>
+
+  <div class="card-wrap" id="cardWrap">
+    <div class="movie-card" id="movieCard"></div>
+  </div>
+</main>
+
+<footer>MovieRoulette &mdash; for the indecisive cinephile</footer>
+
+<script>
+  const TMDB_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjM2EzZjdjYmUxMTlmMTJiMzMwZTVjNTVmYzhjZjNjNCIsIm5iZiI6MTc3MzYwODIzMS4xMDIwMDAyLCJzdWIiOiI2OWI3MWQyNzUzM2E2N2RmM2EyMWQ3N2EiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.u5g_W_T_Y3LVUgLeE3-NeJsztLpVENN9sDKitBSwqBQ';
+
+  async function fetchPoster(title, year) {
+    try {
+      const url = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(title)}&year=${year}`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${TMDB_TOKEN}` }
+      });
+      const data = await res.json();
+      const path = data.results?.[0]?.poster_path;
+      return path ? `https://image.tmdb.org/t/p/w500${path}` : null;
+    } catch {
+      return null;
+    }
+  }
+
+  let selectedGenres = new Set();
+  let currentMovieId = null;
+  let hasVoted = false;
+
+  // ── Load genres ──
+  async function loadGenres() {
+    const res = await fetch('/api/genres');
+    const genres = await res.json();
+    const grid = document.getElementById('genreGrid');
+    grid.innerHTML = genres.map(g => `
+      <button class="genre-chip" data-id="${g.id}" onclick="toggleGenre(this, ${g.id})">${g.name}</button>
+    `).join('');
+  }
+
+  function toggleGenre(el, id) {
+    if (selectedGenres.has(id)) {
+      selectedGenres.delete(id);
+      el.classList.remove('active');
+    } else {
+      selectedGenres.add(id);
+      el.classList.add('active');
+    }
+  }
+
+  function clearGenres() {
+    selectedGenres.clear();
+    document.querySelectorAll('.genre-chip').forEach(c => c.classList.remove('active'));
+  }
+
+  // ── Spin ──
+  async function doSpin() {
+    const btn = document.getElementById('spinBtn');
+    const wrap = document.getElementById('cardWrap');
+    const card = document.getElementById('movieCard');
+
+    btn.disabled = true;
+    btn.classList.add('spinning');
+    hasVoted = false;
+
+    card.innerHTML = `<div class="shimmer" style="height:280px;border-radius:8px;margin-bottom:24px"></div>`;
+    wrap.classList.remove('visible');
+    setTimeout(() => wrap.classList.add('visible'), 30);
+
+    const params = selectedGenres.size > 0
+      ? `?genre_ids=${[...selectedGenres].join(',')}`
+      : '';
+
+    try {
+      const res = await fetch(`/api/movies/spin${params}`);
+      const movie = await res.json();
+
+      wrap.classList.remove('visible');
+      if (!res.ok) {
+        card.innerHTML = `<div class="state-msg">😕 ${movie.error || 'No movies found for your selection.'}</div>`;
+        setTimeout(() => wrap.classList.add('visible'), 30);
+        return;
+      }
+
+      currentMovieId = movie.id;
+      await renderCard(movie);
+
+      setTimeout(() => wrap.classList.add('visible'), 30);
+    } catch (e) {
+      wrap.classList.remove('visible');
+      card.innerHTML = `<div class="state-msg">Something went wrong. Try again.</div>`;
+      setTimeout(() => wrap.classList.add('visible'), 30);
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('spinning');
+    }
+  }
+
+  async function renderCard(movie) {
+    const card = document.getElementById('movieCard');
+    const posterUrl = await fetchPoster(movie.title, movie.year);
+    const genreTags = movie.genres.map(g =>
+      `<span class="genre-tag">${g.name}</span>`
+    ).join('');
+
+    card.innerHTML = `
+      ${posterUrl ? `<img class="poster-img" src="${posterUrl}" alt="Movie poster">` : ''}
+      <div class="movie-year-director">${movie.year} &nbsp;·&nbsp; dir. ${movie.director}</div>
+      <div class="movie-title">${movie.title}</div>
+      <div class="movie-desc">${movie.description}</div>
+      <div class="movie-genres">${genreTags}</div>
+      <div class="vote-row">
+        <span class="vote-label">Rate it:</span>
+        <button class="vote-btn up" id="upBtn" onclick="vote('up')">
+          👍 <span class="vote-count" id="upCount">${movie.upvotes}</span>
+        </button>
+        <button class="vote-btn down" id="downBtn" onclick="vote('down')">
+          👎 <span class="vote-count" id="downCount">${movie.downvotes}</span>
+        </button>
+        <button class="spin-again-btn" onclick="doSpin()">Spin again →</button>
+      </div>
+    `;
+  }
+
+  // ── Vote ──
+  async function vote(direction) {
+    if (hasVoted || !currentMovieId) return;
+    hasVoted = true;
+
+    document.getElementById('upBtn').classList.add('voted');
+    document.getElementById('downBtn').classList.add('voted');
+
+    const res = await fetch(`/api/movies/${currentMovieId}/vote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vote: direction })
+    });
+    const data = await res.json();
+    document.getElementById('upCount').textContent = data.upvotes;
+    document.getElementById('downCount').textContent = data.downvotes;
+  }
+
+  loadGenres();
+</script>
+</body>
+</html>
