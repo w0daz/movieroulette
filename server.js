@@ -180,8 +180,7 @@ app.post('/api/movies/:id/vote', (req, res) => {
 
   const col = vote === 'up' ? 'upvotes' : 'downvotes';
   db.prepare(`UPDATE movies SET ${col} = ${col} + 1 WHERE id = ?`).run(req.params.id);
-  const updated = db.prepare('SELECT * FROM movies WHERE id = ?').get(req.params.id);
-  res.json({ id: updated.id, upvotes: updated.upvotes, downvotes: updated.downvotes });
+  res.json(enrichMovie(db.prepare('SELECT * FROM movies WHERE id = ?').get(req.params.id)));
 });
 
 // Fallback to index.html
